@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
             processJson(data);
 
         }catch (Exception e) {
+            FileName.setText("");// Clear input field
             String erro = createString("Not Found", "Not Found", "Not Found");
             usersAdapter.add(erro);
         }
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
                         data.getJSONObject(i).getString("pwd"));
                 usersAdapter.add(str);
             } catch (JSONException e){
+                FileName.setText("");// Clear input field
                 String erro = createString("Not Found", "Not Found", "Not Found");
                 usersAdapter.add(erro);
             }
