@@ -3,7 +3,6 @@ package luiz.exeestagio;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -57,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         TextView text;
 
         try {
+            usersAdapter.clear();
             // Get and read file from url to a string
             json = new urlConnect().execute(FileName.getText().toString()).get();
 
@@ -68,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
             processJson(data);
 
         }catch (Exception e) {
-            Log.d(TAG, e.getMessage());
+            String erro = createString("Not Found", "Not Found", "Not Found");
+            usersAdapter.add(erro);
         }
     }
 
@@ -84,7 +85,8 @@ public class MainActivity extends AppCompatActivity {
                         data.getJSONObject(i).getString("pwd"));
                 usersAdapter.add(str);
             } catch (JSONException e){
-                Log.d(TAG, e.getMessage());
+                String erro = createString("Not Found", "Not Found", "Not Found");
+                usersAdapter.add(erro);
             }
         }
     }
@@ -123,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return sb.toString();
             }catch (Exception e) {
-                Log.d(TAG, e.getMessage());
                 return null;
             }
         }
