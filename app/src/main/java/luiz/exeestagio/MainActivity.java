@@ -5,84 +5,109 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TableRow;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * The main and only activity for this app
+ * @author Luiz
+ */
 public class MainActivity extends AppCompatActivity {
 
     protected JSONObject inFile;
-    protected LinearLayout users;
+    protected ListView users;
+    protected ArrayAdapter<String> usersAdapter;
+    EditText FileName;
     private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        users = (LinearLayout) findViewById(R.id.Users);
+        List<String> usersList = new ArrayList<>();
+        FileName = (EditText) findViewById(R.id.FileName);
+        users = (ListView) findViewById(R.id.Users);
+
+        FileName.setHint("Enter name of file");
+        usersAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, usersList);
+        users.setAdapter(usersAdapter);
     }
 
+    /**
+     * Method that opens, reads, and process file input (json file) after button clicked
+     * @param v the View
+     */
     public void newFile (View v) {
         JSONArray data;
-        String id, name, pwd, json;
-        TextView ID, Name, Pwd;
-        EditText FileName = (EditText) findViewById(R.id.FileName);
+        String content, json;
+        TextView text;
 
         Log.d(TAG, "button pressed");
 
         try {
+            // Open and read whole file
             AssetManager assetManager = getAssets();
             InputStream reader = assetManager.open(FileName.getText().toString());
             byte[] buffer = new byte[reader.available()];
             reader.read(buffer);
             reader.close();
+
+            // Parse file to string
             json = new String(buffer, "UTF-8");
 
-            Log.d(TAG, json);
+            inFile = new JSONObject(json);// Parse String to json
+            data = inFile.getJSONArray("data");// Get array from json
 
-            //inFile = JReader.readObject();
+            FileName.setText("");// Clear input field
 
-            inFile = new JSONObject(json);
-            data = inFile.getJSONArray("data");
+            processJson(data);
 
-            FileName.setText("");
-            for (int i = 0; i < data.length(); i++) {
-                LinearLayout user = new LinearLayout(this);
-                id = "ID: ";
-                name = "Name: ";
-                pwd = "PWD: ";
-                id += data.getJSONObject(i).getString("id");
-                name += data.getJSONObject(i).getString("name");
-                pwd += data.getJSONObject(i).getString("pwd");
-
-                id += "\n";
-                name += "\n";
-                pwd += "\n";
-
-                ID = new TextView(this);
-                Name = new TextView(this);
-                Pwd = new TextView(this);
-
-                ID.setText(id);
-                Name.setText(name);
-                Pwd.setText(pwd);
-
-                user.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT));
-                user.setMinimumHeight(100);
-                user.addView(ID);
-                user.addView(Name);
-                user.addView(Pwd);
-
-                users.addView(user);
-            }
         }catch (Exception e) {
             Log.d(TAG, e.getMessage());
         }
+    }
+
+    /**
+     * Method get content from json file and set it to the listView
+     * @param data the json array
+     */
+    private void processJson(JSONArray data) {
+        String str = "";
+        for (int i = 0; i < data.length(); i++) {
+            try {
+                str = createString(data.getJSONObject(i).getString("id"), data.getJSONObject(i).getString("name"),
+                        data.getJSONObject(i).getString("pwd"));
+                usersAdapter.add(str);
+            } catch (JSONException e){
+                Log.d(TAG, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Method to create the string to be displayed for each item in listView
+     * @param id String containing with value for json.key id
+     * @param name String containing with value for json.key name
+     * @param pwd String containing with value for json.key pwd
+     * @return the formed string
+     */
+    private String createString (String id, String name, String pwd) {
+        String str;
+
+        str = "\nID: " + id + "\n\n";;
+        str += "Name: " + name + "\n\n";
+        str += "PWD: " + pwd + "\n";
+
+        return str;
     }
 }
