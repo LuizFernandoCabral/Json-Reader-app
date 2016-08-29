@@ -1,6 +1,6 @@
 package luiz.exeestagio;
 
-import android.content.res.AssetManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -14,7 +14,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     protected ListView users;
     protected ArrayAdapter<String> usersAdapter;
     EditText FileName;
+    HttpURLConnection http;
     private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
@@ -38,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         FileName = (EditText) findViewById(R.id.FileName);
         users = (ListView) findViewById(R.id.Users);
 
-        FileName.setHint("Enter name of file");
+        FileName.setHint("Enter url of file");
         usersAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, usersList);
         users.setAdapter(usersAdapter);
     }
@@ -52,18 +56,9 @@ public class MainActivity extends AppCompatActivity {
         String content, json;
         TextView text;
 
-        Log.d(TAG, "button pressed");
-
         try {
-            // Open and read whole file
-            AssetManager assetManager = getAssets();
-            InputStream reader = assetManager.open(FileName.getText().toString());
-            byte[] buffer = new byte[reader.available()];
-            reader.read(buffer);
-            reader.close();
-
-            // Parse file to string
-            json = new String(buffer, "UTF-8");
+            // Get and read file from url to a string
+            json = new urlConnect().execute(FileName.getText().toString()).get();
 
             inFile = new JSONObject(json);// Parse String to json
             data = inFile.getJSONArray("data");// Get array from json
@@ -109,5 +104,28 @@ public class MainActivity extends AppCompatActivity {
         str += "PWD: " + pwd + "\n";
 
         return str;
+    }
+
+    /**
+     * Get file from URL
+     * Has to be async (this was hard)
+     */
+    class urlConnect extends AsyncTask<String,Void,String> {
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                StringBuilder sb = new StringBuilder();
+                URL url = new URL(params[0]);
+                BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+                String line;
+                while ((line = in.readLine()) != null) {
+                    sb.append(line);
+                }
+                return sb.toString();
+            }catch (Exception e) {
+                Log.d(TAG, e.getMessage());
+                return null;
+            }
+        }
     }
 }
